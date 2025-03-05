@@ -1,50 +1,63 @@
-# Welcome to your Expo app 👋
+# React Native TypeScript Uygulama
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Bu proje, React Native ve TypeScript kullanılarak geliştirilmiş bir mobil uygulamadır.
 
-## Get started
+## Özellikler
 
-1. Install dependencies
+- Giriş ve kayıt olma ekranları
+- Ana sayfa, eşleşme, arama, topluluklar ve profil sayfaları
+- Alt navigasyon çubuğu
+- Modern ve kullanıcı dostu arayüz
 
-   ```bash
-   npm install
-   ```
+## Kurulum
 
-2. Start the app
+Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:
 
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+1. Repoyu klonlayın:
+```
+git clone <repo-url>
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Proje dizinine gidin:
+```
+cd frontend
+```
 
-## Learn more
+3. Bağımlılıkları yükleyin:
+```
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Uygulamayı başlatın:
+```
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Kullanılan Teknolojiler
 
-## Join the community
+- React Native
+- TypeScript
+- Expo
+- React Navigation
 
-Join our community of developers creating universal apps.
+## Proje Yapısı
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+src/
+  ├── assets/        # Resimler, fontlar ve diğer statik dosyalar
+  ├── components/    # Yeniden kullanılabilir bileşenler
+  ├── hooks/         # Özel React hooks
+  ├── layouts/       # Sayfa düzenleri
+  ├── navigation/    # Navigasyon yapılandırması
+  ├── screens/       # Uygulama ekranları
+  └── utils/         # Yardımcı fonksiyonlar ve sabitler
+```
+
+## Ekranlar
+
+- **Giriş/Kayıt**: Kullanıcı kimlik doğrulama ekranları
+- **Ana Sayfa**: Kullanıcının ana akışı
+- **Eşleşme**: Kullanıcı eşleşmeleri
+- **Arama**: Kullanıcı, topluluk ve içerik arama
+- **Topluluklar**: Kullanıcının katıldığı topluluklar
+- **Profil**: Kullanıcı profili ve ayarları 
