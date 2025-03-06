@@ -14,15 +14,38 @@ interface HeaderProps {
   username?: string;
   onSearch?: (text: string) => void;
   onFilter?: () => void;
+  onNotificationsPress?: () => void;
+  onMessagesPress?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ variant, username, onSearch, onFilter }) => {
+const Header: React.FC<HeaderProps> = ({
+  variant,
+  username,
+  onSearch,
+  onFilter,
+  onNotificationsPress,
+  onMessagesPress,
+}) => {
   const renderContent = () => {
     switch (variant) {
       case 'home':
         return (
           <View style={styles.container}>
             <Text style={styles.appTitle}>TravelApp</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={onNotificationsPress}
+              >
+                <MaterialCommunityIcons name="bell-outline" size={24} color="#000" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerButton, styles.lastHeaderButton]}
+                onPress={onMessagesPress}
+              >
+                <MaterialCommunityIcons name="message-outline" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
         );
 
@@ -101,6 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
+    justifyContent: 'space-between',
   },
   appTitle: {
     fontSize: 22,
@@ -143,6 +167,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  lastHeaderButton: {
+    marginRight: -8,
   },
 });
 

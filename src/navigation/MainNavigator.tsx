@@ -8,8 +8,13 @@ import MatchScreen from '../screens/MatchScreen';
 import SearchScreen from '../screens/SearchScreen';
 import CommunitiesScreen from '../screens/CommunitiesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import MessagesScreen from '../screens/MessagesScreen';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Custom tab bar icon component
 const TabBarIcon: React.FC<{
@@ -45,77 +50,114 @@ const TabBarIcon: React.FC<{
 
 const MainNavigator: React.FC = () => {
   return (
-    <Tab.Navigator
+    <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon
-              focused={focused}
-              icon="home"
+      <Stack.Screen name="MainTabs">
+        {() => (
+          <Tab.Navigator
+            screenOptions={{
+              headerShown: false,
+              tabBarStyle: styles.tabBar,
+              tabBarShowLabel: false,
+            }}
+          >
+            <Tab.Screen 
+              name="Home" 
+              component={HomeScreen} 
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabBarIcon
+                    focused={focused}
+                    icon="home"
+                  />
+                ),
+              }}
             />
-          ),
+            <Tab.Screen 
+              name="Match" 
+              component={MatchScreen} 
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabBarIcon
+                    focused={focused}
+                    icon="swap-horizontal"
+                  />
+                ),
+              }}
+            />
+            <Tab.Screen 
+              name="Search" 
+              component={SearchScreen} 
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabBarIcon
+                    focused={focused}
+                    icon="magnify"
+                  />
+                ),
+              }}
+            />
+            <Tab.Screen 
+              name="Communities" 
+              component={CommunitiesScreen} 
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabBarIcon
+                    focused={focused}
+                    icon="account-group"
+                  />
+                ),
+              }}
+            />
+            <Tab.Screen 
+              name="Profile" 
+              component={ProfileScreen} 
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabBarIcon
+                    focused={focused}
+                    icon="account"
+                    isProfile
+                  />
+                ),
+              }}
+            />
+          </Tab.Navigator>
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen 
+        name="Notifications" 
+        component={NotificationsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Notifications',
+          headerTitleStyle: {
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
+          headerBackTitle: '',
+          headerTitleAlign: 'center',
         }}
       />
-      <Tab.Screen 
-        name="Match" 
-        component={MatchScreen} 
+      <Stack.Screen 
+        name="Messages" 
+        component={MessagesScreen}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon
-              focused={focused}
-              icon="swap-horizontal"
-            />
-          ),
+          headerShown: true,
+          headerTitle: 'Messages',
+          headerTitleStyle: {
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
+          headerBackTitle: '',
+          headerTitleAlign: 'center',
         }}
       />
-      <Tab.Screen 
-        name="Search" 
-        component={SearchScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon
-              focused={focused}
-              icon="magnify"
-            />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Communities" 
-        component={CommunitiesScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon
-              focused={focused}
-              icon="account-group"
-            />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon
-              focused={focused}
-              icon="account"
-              isProfile
-              // Profil fotoğrafını buraya ekleyebilirsiniz
-              // profileImage="https://example.com/profile.jpg"
-            />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+    </Stack.Navigator>
   );
 };
 

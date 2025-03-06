@@ -10,4 +10,15 @@ export type MainTabParamList = {
   Search: undefined;
   Communities: undefined;
   Profile: undefined;
+};
+
+export type RootStackParamList = {
+  MainTabs: undefined;
+  Home: undefined;
+  Match: undefined;
+  Search: undefined;
+  Communities: undefined;
+  Profile: undefined;
+  Notifications: undefined;
+  Messages: undefined;
 }; 

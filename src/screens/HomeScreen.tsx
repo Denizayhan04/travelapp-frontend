@@ -1,9 +1,16 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import MainLayout from '../layouts/MainLayout';
 import Post from '../components/Post';
 
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+
   // Test verisi
   const posts = [
     {
@@ -32,7 +39,10 @@ const HomeScreen: React.FC = () => {
   ];
 
   return (
-    <MainLayout>
+    <MainLayout
+      onNotificationsPress={() => navigation.navigate('Notifications')}
+      onMessagesPress={() => navigation.navigate('Messages')}
+    >
       <ScrollView style={styles.container}>
         {posts.map((post, index) => (
           <Post

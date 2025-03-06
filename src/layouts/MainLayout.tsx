@@ -8,6 +8,8 @@ interface MainLayoutProps {
   username?: string;
   onSearch?: (text: string) => void;
   onFilter?: () => void;
+  onNotificationsPress?: () => void;
+  onMessagesPress?: () => void;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -15,6 +17,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   username,
   onSearch,
   onFilter,
+  onNotificationsPress,
+  onMessagesPress,
 }) => {
   const route = useRoute();
   const getHeaderVariant = () => {
@@ -34,6 +38,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         username={username}
         onSearch={onSearch}
         onFilter={onFilter}
+        onNotificationsPress={onNotificationsPress}
+        onMessagesPress={onMessagesPress}
       />
       <View style={styles.content}>{children}</View>
     </View>
