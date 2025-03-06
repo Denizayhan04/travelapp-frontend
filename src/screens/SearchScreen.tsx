@@ -1,73 +1,136 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Keyboard,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MainLayout from '../layouts/MainLayout';
 
-// Mock data for search results
-const mockUsers = [
-  { id: '1', name: 'Ahmet Yılmaz', username: '@ahmet', bio: 'Yazılım Geliştirici' },
-  { id: '2', name: 'Mehmet Kaya', username: '@mehmet', bio: 'Grafik Tasarımcı' },
-  { id: '3', name: 'Ayşe Demir', username: '@ayse', bio: 'Dijital Pazarlama Uzmanı' },
-  { id: '4', name: 'Fatma Şahin', username: '@fatma', bio: 'İçerik Üreticisi' },
-  { id: '5', name: 'Ali Yıldız', username: '@ali', bio: 'Fotoğrafçı' },
-  { id: '6', name: 'Zeynep Çelik', username: '@zeynep', bio: 'Mimar' },
-  { id: '7', name: 'Mustafa Öztürk', username: '@mustafa', bio: 'Öğretmen' },
+// Örnek veri - gerçek uygulamada API'den gelecek
+const MOCK_USERS = [
+  { id: '1', username: 'ahmetyilmaz', name: 'Ahmet Yılmaz' },
+  { id: '2', username: 'mehmetkaya', name: 'Mehmet Kaya' },
+  { id: '3', username: 'aysedemir', name: 'Ayşe Demir' },
+  { id: '4', username: 'fatmaozturk', name: 'Fatma Öztürk' },
+  { id: '5', username: 'aliyildiz', name: 'Ali Yıldız' },
 ];
 
 const SearchScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState(mockUsers);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<typeof MOCK_USERS>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-    
-    if (text.trim() === '') {
-      setResults(mockUsers);
-      return;
+  // Arama sonuçlarını filtrele
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const filtered = MOCK_USERS.filter(
+        user =>
+          user.username.toLowerCase().includes(query) ||
+          user.name.toLowerCase().includes(query)
+      );
+      setSearchResults(filtered);
+      setIsSearching(true);
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
     }
-    
-    const filteredResults = mockUsers.filter(user => 
-      user.name.toLowerCase().includes(text.toLowerCase()) || 
-      user.username.toLowerCase().includes(text.toLowerCase()) ||
-      user.bio.toLowerCase().includes(text.toLowerCase())
-    );
-    
-    setResults(filteredResults);
+  }, [searchQuery]);
+
+  // Aramayı geçmişe ekle
+  const handleSearch = (query: string) => {
+    if (query.trim() && !recentSearches.includes(query)) {
+      setRecentSearches(prev => [query, ...prev.slice(0, 9)]); // Son 10 aramayı tut
+    }
+    Keyboard.dismiss();
   };
 
-  const renderUserItem = ({ item }: { item: typeof mockUsers[0] }) => (
-    <TouchableOpacity style={styles.userCard}>
-      <View style={styles.profilePic} />
+  // Tek bir aramayı geçmişten sil
+  const removeSearch = (searchToRemove: string) => {
+    setRecentSearches(prev => prev.filter(search => search !== searchToRemove));
+  };
+
+  // Tüm arama geçmişini temizle
+  const clearAllSearches = () => {
+    setRecentSearches([]);
+  };
+
+  const renderSearchItem = ({ item }: { item: typeof MOCK_USERS[0] }) => (
+    <TouchableOpacity style={styles.resultItem}>
       <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.name}</Text>
-        <Text style={styles.userUsername}>{item.username}</Text>
-        <Text style={styles.userBio}>{item.bio}</Text>
+        <Text style={styles.username}>{item.username}</Text>
+        <Text style={styles.name}>{item.name}</Text>
       </View>
     </TouchableOpacity>
   );
 
+  const renderRecentSearch = ({ item }: { item: string }) => (
+    <View style={styles.recentItem}>
+      <TouchableOpacity
+        style={styles.recentSearchText}
+        onPress={() => setSearchQuery(item)}
+      >
+        <MaterialCommunityIcons name="history" size={20} color="#666" />
+        <Text style={styles.recentSearchQuery}>{item}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => removeSearch(item)}
+      >
+        <MaterialCommunityIcons name="close" size={20} color="#666" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <MainLayout>
+    <MainLayout
+      onSearch={(text) => {
+        setSearchQuery(text);
+        if (!text.trim()) {
+          handleSearch(text);
+        }
+      }}
+    >
       <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Kullanıcı, topluluk veya içerik ara..."
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
-        
-        <FlatList
-          data={results}
-          renderItem={renderUserItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
+        {/* Son Aramalar veya Arama Sonuçları */}
+        {!isSearching ? (
+          recentSearches.length > 0 ? (
+            <View style={styles.recentSearches}>
+              <View style={styles.recentHeader}>
+                <Text style={styles.recentTitle}>Son Aramalar</Text>
+                <TouchableOpacity onPress={clearAllSearches}>
+                  <Text style={styles.clearAll}>Tümünü Temizle</Text>
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={recentSearches}
+                renderItem={renderRecentSearch}
+                keyExtractor={(item, index) => index.toString()}
+              />
             </View>
-          }
-        />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>Henüz arama yapılmadı</Text>
+            </View>
+          )
+        ) : (
+          <FlatList
+            data={searchResults}
+            renderItem={renderSearchItem}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
+              </View>
+            }
+          />
+        )}
       </View>
     </MainLayout>
   );
@@ -76,67 +139,90 @@ const SearchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-  },
-  searchContainer: {
-    padding: 15,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    margin: 16,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    height: 44,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 10,
+    flex: 1,
+    marginLeft: 8,
     fontSize: 16,
   },
-  listContainer: {
-    padding: 15,
-  },
-  userCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  profilePic: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ddd',
-    marginRight: 15,
-  },
-  userInfo: {
+  recentSearches: {
     flex: 1,
   },
-  userName: {
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f2',
+  },
+  recentTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 3,
+    fontWeight: '600',
   },
-  userUsername: {
+  clearAll: {
+    color: '#4A80F0',
     fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
   },
-  userBio: {
-    fontSize: 14,
-    color: '#888',
+  recentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f2',
   },
-  emptyContainer: {
-    padding: 20,
+  recentSearchText: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
   },
+  recentSearchQuery: {
+    marginLeft: 12,
+    fontSize: 15,
+  },
+  removeButton: {
+    padding: 4,
+  },
+  resultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f2',
+  },
+  userInfo: {
+    marginLeft: 12,
+  },
+  username: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  name: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 32,
+  },
   emptyText: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 15,
+    color: '#666',
   },
 });
 

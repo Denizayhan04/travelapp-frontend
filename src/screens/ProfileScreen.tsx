@@ -1,66 +1,198 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  FlatList,
+  ImageBackground,
+  TouchableOpacity,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MainLayout from '../layouts/MainLayout';
+import Post from '../components/Post';
 
-const ProfileScreen: React.FC = () => {
-  // Mock user data
-  const user = {
-    name: 'Ahmet Yılmaz',
-    username: '@ahmet',
-    bio: 'Yazılım Geliştirici | React Native & TypeScript | İstanbul',
-    followers: 245,
-    following: 187,
-    posts: 42,
+// Örnek veri
+const mockProfile = {
+  name: 'Ahmet Yılmaz',
+  username: '@ahmetyilmaz',
+  profileImage: 'https://picsum.photos/200',
+  coverImage: 'https://picsum.photos/800/400',
+  bio: 'Gezmeyi ve yeni yerler keşfetmeyi seven bir gezgin. Fotoğraf çekmeye bayılırım ve her anı ölümsüzleştirmeye çalışırım. ✈️ 📸',
+  followers: 1234,
+  following: 891,
+  hobbies: ['Fotoğrafçılık', 'Seyahat', 'Yüzme', 'Kitap Okuma'],
+  languages: ['Türkçe', 'İngilizce', 'İspanyolca'],
+  joinedCommunities: [
+    {
+      id: '1',
+      name: 'Gezginler Kulübü',
+      image: 'https://picsum.photos/400/200',
+      memberCount: 1250,
+    },
+    {
+      id: '2',
+      name: 'Fotoğrafçılar',
+      image: 'https://picsum.photos/400/201',
+      memberCount: 850,
+    },
+    {
+      id: '3',
+      name: 'Backpackers',
+      image: 'https://picsum.photos/400/202',
+      memberCount: 3200,
+    },
+  ],
+  posts: [
+    {
+      id: '1',
+      image: 'https://picsum.photos/400/400',
+      caption: 'Harika bir gün batımı 🌅',
+      likes: 128,
+      comments: 24,
+      timestamp: '2 saat önce',
+    },
+    {
+      id: '2',
+      image: 'https://picsum.photos/400/401',
+      caption: 'Şehrin en güzel manzarası 🏙️',
+      likes: 256,
+      comments: 32,
+      timestamp: '1 gün önce',
+    },
+  ],
+};
+
+// Component props tanımlama
+interface ProfileScreenProps {
+  isOwnProfile?: boolean;
+}
+
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOwnProfile = false }) => {
+  const renderCommunityItem = ({ item }: { item: typeof mockProfile.joinedCommunities[0] }) => (
+    <TouchableOpacity style={styles.communityCard}>
+      <Image source={{ uri: item.image }} style={styles.communityImage} />
+      <Text style={styles.communityName} numberOfLines={1}>{item.name}</Text>
+      <View style={styles.communityMembers}>
+        <MaterialCommunityIcons name="account-group" size={14} color="#666" />
+        <Text style={styles.communityMemberCount}>
+          {item.memberCount.toLocaleString()}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderProfileButton = () => {
+    if (isOwnProfile) {
+      return (
+        <TouchableOpacity style={[styles.profileButton, styles.editButton]}>
+          <Text style={styles.editButtonText}>Profili Düzenle</Text>
+        </TouchableOpacity>
+      );
+    }
+    return (
+      <TouchableOpacity style={[styles.profileButton, styles.followButton]}>
+        <Text style={styles.followButtonText}>Takip Et</Text>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <MainLayout>
+    <MainLayout username={mockProfile.username}>
       <ScrollView style={styles.container}>
-        <View style={styles.profileHeader}>
-          <View style={styles.profilePic} />
-          <Text style={styles.profileName}>{user.name}</Text>
-          <Text style={styles.profileUsername}>{user.username}</Text>
-          <Text style={styles.profileBio}>{user.bio}</Text>
+        {/* Kapak ve Profil Bilgileri */}
+        <View style={styles.headerContainer}>
+          <ImageBackground
+            source={{ uri: mockProfile.coverImage }}
+            style={styles.coverImage}
+          />
+          <View style={styles.profileImageContainer}>
+            <Image
+              source={{ uri: mockProfile.profileImage }}
+              style={styles.profileImage}
+            />
+          </View>
+        </View>
+
+        <View style={styles.profileInfoContainer}>
+          <View style={styles.nameButtonContainer}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>{mockProfile.name}</Text>
+              <Text style={styles.username}>{mockProfile.username}</Text>
+            </View>
+            {renderProfileButton()}
+          </View>
+          <View style={styles.followContainer}>
+            <TouchableOpacity style={styles.followItem}>
+              <Text style={styles.followCount}>{mockProfile.following}</Text>
+              <Text style={styles.followLabel}>Takip Edilen</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.followItem}>
+              <Text style={styles.followCount}>{mockProfile.followers}</Text>
+              <Text style={styles.followLabel}>Takipçi</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bio ve Detaylar */}
+        <View style={styles.bioSection}>
+          <Text style={styles.bio}>{mockProfile.bio}</Text>
           
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.posts}</Text>
-              <Text style={styles.statLabel}>Gönderi</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.followers}</Text>
-              <Text style={styles.statLabel}>Takipçi</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.following}</Text>
-              <Text style={styles.statLabel}>Takip</Text>
+          <View style={styles.detailSection}>
+            <Text style={styles.detailTitle}>Hobiler</Text>
+            <View style={styles.tagContainer}>
+              {mockProfile.hobbies.map((hobby, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{hobby}</Text>
+                </View>
+              ))}
             </View>
           </View>
-          
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Profili Düzenle</Text>
-          </TouchableOpacity>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailTitle}>Bilinen Diller</Text>
+            <View style={styles.tagContainer}>
+              {mockProfile.languages.map((language, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{language}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
-        
-        <View style={styles.sectionContainer}>
+
+        {/* Üye Olunan Topluluklar */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Üye Olduğu Topluluklar</Text>
+          <FlatList
+            data={mockProfile.joinedCommunities}
+            renderItem={renderCommunityItem}
+            keyExtractor={item => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.communitiesList}
+          />
+        </View>
+
+        {/* Gönderiler */}
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gönderiler</Text>
-          <View style={styles.postsGrid}>
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <View key={item} style={styles.postItem} />
-            ))}
-          </View>
-        </View>
-        
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Topluluklar</Text>
-          <View style={styles.communitiesList}>
-            {['Teknoloji Meraklıları', 'Seyahat Tutkunları', 'Kitap Kulübü'].map((item) => (
-              <TouchableOpacity key={item} style={styles.communityItem}>
-                <View style={styles.communityIcon} />
-                <Text style={styles.communityName}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <FlatList
+            data={mockProfile.posts}
+            renderItem={({ item }) => (
+              <Post
+                username={mockProfile.name}
+                userImage={mockProfile.profileImage}
+                postImage={item.image}
+                caption={item.caption}
+                likes={item.likes}
+                timestamp={item.timestamp}
+              />
+            )}
+            keyExtractor={item => item.id}
+            scrollEnabled={false}
+          />
         </View>
       </ScrollView>
     </MainLayout>
@@ -72,106 +204,177 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
-  profileHeader: {
+  headerContainer: {
+    position: 'relative',
+  },
+  coverImage: {
+    height: 180,
+    width: '100%',
+  },
+  profileImageContainer: {
+    position: 'absolute',
+    bottom: -60,
+    left: 16,
+    zIndex: 2,
+    padding: 4,
     backgroundColor: '#fff',
-    padding: 20,
-    alignItems: 'center',
+    borderRadius: 64,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  profileInfoContainer: {
+    backgroundColor: '#fff',
+    paddingTop: 70,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ddd',
-    marginBottom: 15,
+  nameButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  profileName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 5,
+  nameContainer: {
+    flex: 1,
   },
-  profileUsername: {
+  name: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
+  },
+  username: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 10,
+    marginTop: 1,
   },
-  profileBio: {
+  bioSection: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  bio: {
     fontSize: 14,
+    lineHeight: 20,
     color: '#444',
-    textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  statsContainer: {
+  detailSection: {
+    marginBottom: 16,
+  },
+  detailTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  tagContainer: {
     flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-around',
-    marginBottom: 20,
+    flexWrap: 'wrap',
   },
-  statItem: {
-    alignItems: 'center',
+  tag: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
   },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  statLabel: {
-    fontSize: 12,
+  tagText: {
+    fontSize: 14,
     color: '#666',
   },
-  editButton: {
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  sectionContainer: {
-    backgroundColor: '#fff',
-    padding: 20,
-    marginTop: 10,
+  section: {
+    marginTop: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  postsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  postItem: {
-    width: '32%',
-    aspectRatio: 1,
-    backgroundColor: '#ddd',
-    marginBottom: 10,
-    borderRadius: 5,
+    fontWeight: '600',
+    marginHorizontal: 16,
+    marginBottom: 12,
   },
   communitiesList: {
-    marginTop: 10,
+    paddingHorizontal: 16,
   },
-  communityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  communityCard: {
+    width: 160,
+    marginRight: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  communityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ddd',
-    marginRight: 15,
+  communityImage: {
+    width: '100%',
+    height: 90,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   communityName: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
+    padding: 8,
+    paddingBottom: 4,
+  },
+  communityMembers: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
+  communityMemberCount: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  followContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  followItem: {
+    flexDirection: 'row',
+    marginRight: 20,
+    alignItems: 'center',
+  },
+  followCount: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
+  },
+  followLabel: {
+    fontSize: 15,
+    color: '#666',
+    marginLeft: 4,
+  },
+  profileButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  editButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  followButton: {
+    backgroundColor: '#000',
+  },
+  editButtonText: {
+    color: '#000',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  followButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 

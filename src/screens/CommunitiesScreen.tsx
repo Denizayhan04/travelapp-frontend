@@ -1,80 +1,174 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MainLayout from '../layouts/MainLayout';
 
-// Mock data for communities
-const mockCommunities = [
-  { id: '1', name: 'Teknoloji Meraklıları', members: 1250, posts: 324 },
-  { id: '2', name: 'Seyahat Tutkunları', members: 875, posts: 210 },
-  { id: '3', name: 'Kitap Kulübü', members: 620, posts: 150 },
-  { id: '4', name: 'Fitness & Sağlık', members: 1540, posts: 430 },
-  { id: '5', name: 'Yemek Tarifleri', members: 980, posts: 275 },
-  { id: '6', name: 'Fotoğrafçılık', members: 750, posts: 190 },
-  { id: '7', name: 'Müzik Severler', members: 1100, posts: 310 },
-];
+// Örnek veri
+const mockCommunities = {
+  joined: [
+    {
+      id: '1',
+      name: 'Gezginler Kulübü',
+      description: 'Dünyayı gezmek ve yeni yerler keşfetmek isteyenler için topluluk.',
+      image: 'https://picsum.photos/400/200',
+      memberCount: 1250,
+      isJoined: true,
+    },
+    {
+      id: '2',
+      name: 'Fotoğrafçılar',
+      description: 'Seyahat fotoğrafçılığı tutkunları için özel topluluk.',
+      image: 'https://picsum.photos/400/201',
+      memberCount: 850,
+      isJoined: true,
+    },
+  ],
+  suggested: [
+    {
+      id: '3',
+      name: 'Backpackers',
+      description: 'Sırt çantalı gezginlerin deneyim paylaşım platformu.',
+      image: 'https://picsum.photos/400/202',
+      memberCount: 3200,
+      isJoined: false,
+    },
+    {
+      id: '4',
+      name: 'Solo Travelers',
+      description: 'Yalnız seyahat edenler için rehberlik ve arkadaşlık topluluğu.',
+      image: 'https://picsum.photos/400/203',
+      memberCount: 1500,
+      isJoined: false,
+    },
+  ],
+};
 
 const CommunitiesScreen: React.FC = () => {
-  const renderCommunityItem = ({ item }: { item: typeof mockCommunities[0] }) => (
-    <TouchableOpacity style={styles.communityCard}>
-      <View style={styles.communityIcon} />
-      <View style={styles.communityInfo}>
-        <Text style={styles.communityName}>{item.name}</Text>
-        <Text style={styles.communityStats}>
-          {item.members} üye • {item.posts} gönderi
+  const [communities, setCommunities] = useState(mockCommunities);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCommunities, setFilteredCommunities] = useState(mockCommunities);
+
+  // Arama sonuçlarını filtrele
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const filtered = {
+        joined: communities.joined.filter(
+          community =>
+            community.name.toLowerCase().includes(query) ||
+            community.description.toLowerCase().includes(query)
+        ),
+        suggested: communities.suggested.filter(
+          community =>
+            community.name.toLowerCase().includes(query) ||
+            community.description.toLowerCase().includes(query)
+        ),
+      };
+      setFilteredCommunities(filtered);
+    } else {
+      setFilteredCommunities(communities);
+    }
+  }, [searchQuery, communities]);
+
+  const handleJoinPress = (communityId: string) => {
+    setCommunities(prev => {
+      const allCommunities = [...prev.joined, ...prev.suggested];
+      const updatedCommunity = allCommunities.find(c => c.id === communityId);
+      
+      if (updatedCommunity) {
+        if (updatedCommunity.isJoined) {
+          // Topluluktan çık
+          return {
+            joined: prev.joined.filter(c => c.id !== communityId),
+            suggested: [...prev.suggested, { ...updatedCommunity, isJoined: false }],
+          };
+        } else {
+          // Topluluğa katıl
+          return {
+            joined: [...prev.joined, { ...updatedCommunity, isJoined: true }],
+            suggested: prev.suggested.filter(c => c.id !== communityId),
+          };
+        }
+      }
+      return prev;
+    });
+  };
+
+  const renderCommunityCard = ({ item }: { item: typeof mockCommunities.joined[0] }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.communityImage} />
+      
+      <View style={styles.cardContent}>
+        <View style={styles.headerRow}>
+          <Text style={styles.communityName}>{item.name}</Text>
+          <View style={styles.memberCount}>
+            <MaterialCommunityIcons name="account-group" size={20} color="#666" />
+            <Text style={styles.memberCountText}>
+              {item.memberCount.toLocaleString()}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.description} numberOfLines={2}>
+          {item.description}
         </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.joinButton,
+            item.isJoined && styles.joinedButton,
+          ]}
+          onPress={() => handleJoinPress(item.id)}
+        >
+          <Text style={[
+            styles.joinButtonText,
+            item.isJoined && styles.joinedButtonText,
+          ]}>
+            {item.isJoined ? 'Üye ✓' : 'Katıl'}
+          </Text>
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
-    <MainLayout>
+    <MainLayout
+      onSearch={(text) => setSearchQuery(text)}
+    >
       <View style={styles.container}>
-        <View style={styles.categoriesContainer}>
-          <ScrollableCategories />
-        </View>
-        
         <FlatList
-          data={mockCommunities}
-          renderItem={renderCommunityItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
+          data={[
+            { title: 'Üye Olduğun Topluluklar', data: filteredCommunities.joined },
+            { title: 'Önerilen Topluluklar', data: filteredCommunities.suggested },
+          ]}
+          renderItem={({ item }) => (
+            item.data.length > 0 ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{item.title}</Text>
+                <FlatList
+                  data={item.data}
+                  renderItem={renderCommunityCard}
+                  keyExtractor={community => community.id}
+                  horizontal={false}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
+            ) : null
+          )}
+          keyExtractor={item => item.title}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>
+                {searchQuery.trim() 
+                  ? 'Aradığınız kriterlere uygun topluluk bulunamadı'
+                  : 'Henüz topluluk bulunmuyor'}
+              </Text>
+            </View>
+          }
         />
       </View>
     </MainLayout>
-  );
-};
-
-// Horizontal scrollable categories component
-const ScrollableCategories = () => {
-  const categories = [
-    'Tümü', 'Teknoloji', 'Seyahat', 'Kitaplar', 'Fitness', 
-    'Yemek', 'Fotoğrafçılık', 'Müzik', 'Sanat', 'Oyunlar'
-  ];
-  
-  return (
-    <FlatList
-      horizontal
-      data={categories}
-      renderItem={({ item, index }) => (
-        <TouchableOpacity 
-          style={[
-            styles.categoryButton, 
-            index === 0 ? styles.activeCategoryButton : null
-          ]}
-        >
-          <Text 
-            style={[
-              styles.categoryText, 
-              index === 0 ? styles.activeCategoryText : null
-            ]}
-          >
-            {item}
-          </Text>
-        </TouchableOpacity>
-      )}
-      keyExtractor={(item) => item}
-      showsHorizontalScrollIndicator={false}
-    />
   );
 };
 
@@ -83,64 +177,89 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
-  categoriesContainer: {
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  card: {
     backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginHorizontal: 5,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-  },
-  activeCategoryButton: {
-    backgroundColor: '#4A80F0',
-  },
-  categoryText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  activeCategoryText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  listContainer: {
-    padding: 15,
-  },
-  communityCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    alignItems: 'center',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  communityIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ddd',
-    marginRight: 15,
+  communityImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
-  communityInfo: {
-    flex: 1,
+  cardContent: {
+    padding: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   communityName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '600',
+    flex: 1,
   },
-  communityStats: {
+  memberCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  memberCountText: {
+    marginLeft: 4,
+    color: '#666',
+    fontSize: 14,
+  },
+  description: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  joinButton: {
+    backgroundColor: '#4A80F0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  joinedButton: {
+    backgroundColor: '#e8f0fe',
+  },
+  joinButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  joinedButtonText: {
+    color: '#4A80F0',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 32,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 
