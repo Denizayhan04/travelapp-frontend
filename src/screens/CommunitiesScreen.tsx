@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import MainLayout from '../layouts/MainLayout';
+
+type CommunitiesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Örnek veri
 const mockCommunities = {
@@ -44,6 +49,7 @@ const mockCommunities = {
 };
 
 const CommunitiesScreen: React.FC = () => {
+  const navigation = useNavigation<CommunitiesScreenNavigationProp>();
   const [communities, setCommunities] = useState(mockCommunities);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommunities, setFilteredCommunities] = useState(mockCommunities);
@@ -94,8 +100,15 @@ const CommunitiesScreen: React.FC = () => {
     });
   };
 
+  const handleCommunityPress = (communityId: string) => {
+    navigation.navigate('CommunityDetail', { communityId });
+  };
+
   const renderCommunityCard = ({ item }: { item: typeof mockCommunities.joined[0] }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => handleCommunityPress(item.id)}
+    >
       <Image source={{ uri: item.image }} style={styles.communityImage} />
       
       <View style={styles.cardContent}>
@@ -118,7 +131,10 @@ const CommunitiesScreen: React.FC = () => {
             styles.joinButton,
             item.isJoined && styles.joinedButton,
           ]}
-          onPress={() => handleJoinPress(item.id)}
+          onPress={(e) => {
+            e.stopPropagation(); // Prevent triggering the card's onPress
+            handleJoinPress(item.id);
+          }}
         >
           <Text style={[
             styles.joinButtonText,
@@ -128,7 +144,7 @@ const CommunitiesScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

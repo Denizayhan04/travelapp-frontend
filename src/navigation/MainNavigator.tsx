@@ -10,8 +10,12 @@ import CommunitiesScreen from '../screens/CommunitiesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import MessagesScreen from '../screens/MessagesScreen';
+import ChatScreen from '../screens/ChatScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
+import UserProfileScreen from '../screens/UserProfileScreen';
+import CommunityDetailScreen from '../screens/CommunityDetailScreen';
+import PostDetailScreen from '../screens/PostDetailScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -129,45 +133,103 @@ const MainNavigator: React.FC = () => {
         )}
       </Stack.Screen>
 
-      <Stack.Screen 
-        name="Notifications" 
-        component={NotificationsScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'Notifications',
-          headerTitleStyle: {
-            fontSize: 18,
-          },
-          headerShadowVisible: false,
-          headerBackTitle: '',
-          headerTitleAlign: 'center',
-        }}
-      />
-      <Stack.Screen 
-        name="Messages" 
-        component={MessagesScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'Messages',
-          headerTitleStyle: {
-            fontSize: 18,
-          },
-          headerShadowVisible: false,
-          headerBackTitle: '',
-          headerTitleAlign: 'center',
-        }}
-      />
+      <Stack.Group screenOptions={{ presentation: 'card' }}>
+        <Stack.Screen 
+          name="UserProfile" 
+          component={UserProfileScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Profil',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="PostDetail" 
+          component={PostDetailScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Gönderi',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="CommunityDetail" 
+          component={CommunityDetailScreen}
+          options={({ route }) => ({
+            headerShown: true,
+            headerTitle: 'Topluluk',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          })}
+        />
+        <Stack.Screen 
+          name="Notifications" 
+          component={NotificationsScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Bildirimler',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="Messages" 
+          component={MessagesScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Mesajlar',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="Chat" 
+          component={ChatScreen}
+          options={({ route }) => ({
+            headerShown: true,
+            headerTitle: route.params?.username || 'Sohbet',
+            headerTitleStyle: {
+              fontSize: 18,
+            },
+            headerShadowVisible: false,
+            headerBackTitle: '',
+            headerTitleAlign: 'center',
+          })}
+        />
+      </Stack.Group>
     </Stack.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 65,
+    height: 50,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    paddingBottom: 8,
+    paddingBottom: 0,
   },
   iconContainer: {
     alignItems: 'center',

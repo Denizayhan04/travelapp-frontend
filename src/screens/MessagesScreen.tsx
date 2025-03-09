@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,20 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  TextInput,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type MessagesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Örnek mesaj verileri
 const mockMessages = [
   {
     id: '1',
+    userId: '2',
     user: {
       name: 'Ahmet Yılmaz',
       image: 'https://picsum.photos/200',
@@ -22,6 +30,7 @@ const mockMessages = [
   },
   {
     id: '2',
+    userId: '3',
     user: {
       name: 'Mehmet Kaya',
       image: 'https://picsum.photos/201',
@@ -32,6 +41,7 @@ const mockMessages = [
   },
   {
     id: '3',
+    userId: '4',
     user: {
       name: 'Ayşe Demir',
       image: 'https://picsum.photos/202',
@@ -42,6 +52,7 @@ const mockMessages = [
   },
   {
     id: '4',
+    userId: '5',
     user: {
       name: 'Fatma Öztürk',
       image: 'https://picsum.photos/203',
@@ -53,8 +64,24 @@ const mockMessages = [
 ];
 
 const MessagesScreen: React.FC = () => {
+  const navigation = useNavigation<MessagesScreenNavigationProp>();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleMessagePress = (userId: string, username: string) => {
+    navigation.navigate('Chat', { userId, username });
+  };
+
+  const filteredMessages = useCallback(() => {
+    return mockMessages.filter(message => 
+      message.user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
   const renderMessage = ({ item }: { item: typeof mockMessages[0] }) => (
-    <TouchableOpacity style={styles.messageItem}>
+    <TouchableOpacity 
+      style={styles.messageItem}
+      onPress={() => handleMessagePress(item.userId, item.user.name)}
+    >
       <Image source={{ uri: item.user.image }} style={styles.userImage} />
       <View style={styles.messageContent}>
         <View style={styles.messageHeader}>
@@ -77,14 +104,35 @@ const MessagesScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <MaterialCommunityIcons name="magnify" size={24} color="#666" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Mesajlarda ara..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#666"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            style={styles.clearButton}
+          >
+            <MaterialCommunityIcons name="close" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={mockMessages}
+        data={filteredMessages()}
         renderItem={renderMessage}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Mesaj bulunmuyor</Text>
+            <Text style={styles.emptyText}>
+              {searchQuery.length > 0 ? 'Sonuç bulunamadı' : 'Mesaj bulunmuyor'}
+            </Text>
           </View>
         }
       />
@@ -96,6 +144,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#000',
+  },
+  clearButton: {
+    padding: 4,
   },
   listContainer: {
     flexGrow: 1,

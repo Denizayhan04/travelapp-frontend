@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
 import { useRoute } from '@react-navigation/native';
 
@@ -32,7 +33,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <Header
         variant={getHeaderVariant()}
         username={username}
@@ -42,12 +43,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         onMessagesPress={onMessagesPress}
       />
       <View style={styles.content}>{children}</View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#fff',
   },

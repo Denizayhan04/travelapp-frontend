@@ -1,192 +1,127 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import CommentModal from './CommentModal';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type PostNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface PostProps {
-  username: string;
-  userImage: string;
-  postImage: string;
-  caption: string;
-  likes: number;
-  timestamp: string;
-  taggedUsers?: Array<{
-    username: string;
-  }>;
+  post: {
+    id: string;
+    user_id: string;
+    content: string;
+    images: string[];
+    likes_count: number;
+    comments_count: number;
+    created_at: string;
+    updated_at: string;
+    user: {
+      id: string;
+      name: string;
+      username: string;
+      profileImage: string;
+    };
+  };
 }
 
-const Post: React.FC<PostProps> = ({
-  username,
-  userImage,
-  postImage,
-  caption,
-  likes,
-  timestamp,
-  taggedUsers,
-}) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(likes);
-  const [showComments, setShowComments] = useState(false);
-  
-  // Örnek yorum verisi - gerçek uygulamada bu veriler API'den gelecektir
-  const [comments, setComments] = useState([
-    {
-      id: '1',
-      username: 'ahmet',
-      text: 'Harika bir fotoğraf! 📸',
-      timestamp: '2 saat önce'
-    },
-    {
-      id: '2',
-      username: 'mehmet',
-      text: 'Çok güzel olmuş 👏',
-      timestamp: '1 saat önce'
-    }
-  ]);
+export const Post: React.FC<PostProps> = ({ post }) => {
+  const navigation = useNavigation<PostNavigationProp>();
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
-  };
-
-  const handleCommentPress = () => {
-    console.log('Opening comments modal, current state:', !showComments);
-    setShowComments(!showComments);
-  };
-
-  const handleCloseComments = () => {
-    console.log('Closing comments modal');
-    setShowComments(false);
-  };
-
-  const handleAddComment = (text: string) => {
-    const newComment = {
-      id: String(comments.length + 1),
-      username: 'currentUser', // Gerçek uygulamada oturum açmış kullanıcının adı gelecek
-      text: text,
-      timestamp: 'Şimdi'
-    };
-    setComments([...comments, newComment]);
+  const handlePress = () => {
+    navigation.navigate('PostDetail', { postId: post.id });
   };
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity onPress={handlePress} style={styles.container}>
       <View style={styles.header}>
-        <Image source={{ uri: userImage }} style={styles.userImage} />
-        <View style={styles.headerText}>
-          <Text style={styles.username}>{username}</Text>
-          {taggedUsers && taggedUsers.length > 0 && (
-            <Text style={styles.taggedUsers}>
-              ile birlikte{' '}
-              {taggedUsers.map((user, index) => (
-                <Text key={index} style={styles.taggedUsername}>
-                  {user.username}
-                  {index < taggedUsers.length - 1 ? ', ' : ''}
-                </Text>
-              ))}
-            </Text>
-          )}
+        <Image source={{ uri: post.user.profileImage }} style={styles.avatar} />
+        <View style={styles.userInfo}>
+          <Text style={styles.name}>{post.user.name}</Text>
+          <Text style={styles.username}>@{post.user.username}</Text>
         </View>
       </View>
 
-      <Image source={{ uri: postImage }} style={styles.postImage} />
+      <Text style={styles.content}>{post.content}</Text>
 
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
-          <MaterialCommunityIcons
-            name={isLiked ? 'heart' : 'heart-outline'}
-            size={28}
-            color={isLiked ? '#ff3b30' : '#000'}
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={handleCommentPress} style={styles.actionButton}>
-          <MaterialCommunityIcons name="comment-outline" size={28} color="#000" />
-        </TouchableOpacity>
+      {post.images && post.images.length > 0 && (
+        <View style={styles.imageContainer}>
+          {post.images.map((image, index) => (
+            <Image key={index} source={{ uri: image }} style={styles.image} />
+          ))}
+        </View>
+      )}
+
+      <View style={styles.footer}>
+        <View style={styles.stat}>
+          <MaterialCommunityIcons name="heart-outline" size={20} color="#666" />
+          <Text style={styles.statText}>{post.likes_count}</Text>
+        </View>
+        <View style={styles.stat}>
+          <MaterialCommunityIcons name="comment-outline" size={20} color="#666" />
+          <Text style={styles.statText}>{post.comments_count}</Text>
+        </View>
       </View>
-
-      <View style={styles.info}>
-        <Text style={styles.likes}>{likesCount} beğeni</Text>
-        <Text style={styles.caption}>
-          <Text style={styles.username}>{username}</Text> {caption}
-        </Text>
-        <TouchableOpacity onPress={handleCommentPress}>
-          <Text style={styles.viewComments}>
-            {comments.length} yorumun tümünü gör
-          </Text>
-        </TouchableOpacity>
-        <Text style={styles.timestamp}>{timestamp}</Text>
-      </View>
-
-      <CommentModal
-        visible={showComments}
-        onClose={handleCloseComments}
-        comments={comments}
-        onAddComment={handleAddComment}
-      />
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
-    marginBottom: 10,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 10,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  userImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 10,
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
   },
-  headerText: {
+  userInfo: {
     flex: 1,
   },
+  name: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   username: {
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#666',
   },
-  postImage: {
+  content: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  imageContainer: {
+    marginBottom: 12,
+  },
+  image: {
     width: '100%',
-    aspectRatio: 1,
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  actions: {
+  footer: {
     flexDirection: 'row',
-    padding: 10,
+    alignItems: 'center',
   },
-  actionButton: {
-    marginRight: 16,
+  stat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 24,
   },
-  info: {
-    padding: 10,
-  },
-  likes: {
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  caption: {
-    marginBottom: 4,
-  },
-  viewComments: {
-    color: '#666',
-    marginBottom: 4,
-  },
-  timestamp: {
-    color: '#666',
-    fontSize: 12,
-  },
-  taggedUsers: {
-    fontSize: 13,
+  statText: {
+    marginLeft: 4,
+    fontSize: 14,
     color: '#666',
   },
-  taggedUsername: {
-    fontWeight: '600',
-    color: '#262626',
-  },
-});
-
-export default Post; 
+}); 

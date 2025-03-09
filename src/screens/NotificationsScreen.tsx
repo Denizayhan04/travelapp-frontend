@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,66 +8,67 @@ import {
   Image,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNotificationStore } from '../stores/notificationStore';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 
-// Örnek bildirim verileri
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'follow',
-    user: {
-      name: 'Ahmet Yılmaz',
-      image: 'https://picsum.photos/200',
-    },
-    time: '2 saat önce',
-    isRead: false,
-  },
-  {
-    id: '2',
-    type: 'like',
-    user: {
-      name: 'Mehmet Kaya',
-      image: 'https://picsum.photos/201',
-    },
-    postImage: 'https://picsum.photos/400',
-    time: '3 saat önce',
-    isRead: false,
-  },
-  {
-    id: '3',
-    type: 'comment',
-    user: {
-      name: 'Ayşe Demir',
-      image: 'https://picsum.photos/202',
-    },
-    comment: 'Harika bir yer! Bende gitmek istiyorum 😊',
-    time: '5 saat önce',
-    isRead: true,
-  },
-  {
-    id: '4',
-    type: 'community',
-    user: {
-      name: 'Fatma Öztürk',
-      image: 'https://picsum.photos/203',
-    },
-    communityName: 'Gezginler Kulübü',
-    time: '1 gün önce',
-    isRead: true,
-  },
-];
+type NotificationsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const NotificationsScreen: React.FC = () => {
-  const renderNotification = ({ item }: { item: typeof mockNotifications[0] }) => {
+  const navigation = useNavigation<NotificationsScreenNavigationProp>();
+  const { notifications, loading, error, fetchNotifications, markAsRead } = useNotificationStore();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleUserPress = (userId: string) => {
+    navigation.navigate('UserProfile', { userId });
+  };
+
+  const renderNotification = ({ item }: { item: typeof notifications[0] }) => {
     const getNotificationContent = () => {
       switch (item.type) {
         case 'follow':
-          return `${item.user.name} seni takip etmeye başladı`;
+          return (
+            <Text style={styles.notificationText}>
+              <Text style={styles.username} onPress={() => handleUserPress(item.user.id)}>
+                {item.user.name}
+              </Text>
+              {' seni takip etmeye başladı'}
+            </Text>
+          );
         case 'like':
-          return `${item.user.name} gönderini beğendi`;
+          return (
+            <Text style={styles.notificationText}>
+              <Text style={styles.username} onPress={() => handleUserPress(item.user.id)}>
+                {item.user.name}
+              </Text>
+              {' gönderini beğendi'}
+            </Text>
+          );
         case 'comment':
-          return `${item.user.name} gönderine yorum yaptı: ${item.comment}`;
+          return (
+            <Text style={styles.notificationText}>
+              <Text style={styles.username} onPress={() => handleUserPress(item.user.id)}>
+                {item.user.name}
+              </Text>
+              {' gönderine yorum yaptı: '}
+              {item.comment}
+            </Text>
+          );
         case 'community':
-          return `${item.user.name} ${item.communityName} topluluğuna katıldı`;
+          return (
+            <Text style={styles.notificationText}>
+              <Text style={styles.username} onPress={() => handleUserPress(item.user.id)}>
+                {item.user.name}
+              </Text>
+              {' '}
+              {item.communityName}
+              {' topluluğuna katıldı'}
+            </Text>
+          );
         default:
           return '';
       }
@@ -94,10 +95,13 @@ const NotificationsScreen: React.FC = () => {
           styles.notificationItem,
           !item.isRead && styles.unreadNotification,
         ]}
+        onPress={() => markAsRead(item.id)}
       >
-        <Image source={{ uri: item.user.image }} style={styles.userImage} />
+        <TouchableOpacity onPress={() => handleUserPress(item.user.id)}>
+          <Image source={{ uri: item.user.image }} style={styles.userImage} />
+        </TouchableOpacity>
         <View style={styles.notificationContent}>
-          <Text style={styles.notificationText}>{getNotificationContent()}</Text>
+          {getNotificationContent()}
           <Text style={styles.timeText}>{item.time}</Text>
         </View>
         <MaterialCommunityIcons
@@ -110,10 +114,26 @@ const NotificationsScreen: React.FC = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text>Yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text>Bir hata oluştu: {error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={mockNotifications}
+        data={notifications}
         renderItem={renderNotification}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
@@ -131,6 +151,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContainer: {
     flexGrow: 1,
@@ -178,6 +203,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: '#666',
+  },
+  username: {
+    fontWeight: '600',
+    color: '#000',
   },
 });
 

@@ -19,6 +19,10 @@ export type RootStackParamList = {
   Search: undefined;
   Communities: undefined;
   Profile: undefined;
+  UserProfile: { userId: string };
+  CommunityDetail: { communityId: string };
+  PostDetail: { postId: string; focusComment?: boolean };
   Notifications: undefined;
   Messages: undefined;
+  Chat: { userId: string; username: string };
 }; 
