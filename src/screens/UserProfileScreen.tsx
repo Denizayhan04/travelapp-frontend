@@ -7,6 +7,7 @@ import { useUserStore } from '../stores/userStore';
 import ProfileComponent from '../components/ProfileComponent';
 import { usePostStore } from '../stores/postStore';
 import { Post } from '../stores/postStore';
+import MainLayout from '../layouts/MainLayout';
 
 type UserProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type UserProfileScreenRouteProp = RouteProp<RootStackParamList, 'UserProfile'>;
@@ -31,19 +32,23 @@ const UserProfileScreen: React.FC = () => {
 
   if (userLoading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#4A80F0" />
-      </View>
+      <MainLayout>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#4A80F0" />
+        </View>
+      </MainLayout>
     );
   }
 
   if (userError || !userProfile) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>
-          {userError || 'Kullanıcı bulunamadı'}
-        </Text>
-      </View>
+      <MainLayout>
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>
+            {userError || 'Kullanıcı bulunamadı'}
+          </Text>
+        </View>
+      </MainLayout>
     );
   }
 
@@ -92,35 +97,49 @@ const UserProfileScreen: React.FC = () => {
   };
 
   return (
-    <ProfileComponent
-      profileData={{
-        id: userProfile.id,
-        name: userProfile.name,
-        username: userProfile.username,
-        email: userProfile.email,
-        profileImage: userProfile.profileImage,
-        coverImage: userProfile.coverImage,
-        bio: userProfile.bio,
-        followers_count: userProfile.followers_count,
-        following_count: userProfile.following_count,
-        points: userProfile.points,
-        badges: userProfile.badges,
-        hobbies: userProfile.hobbies,
-        languages: userProfile.languages,
-        created_at: userProfile.created_at,
-        updated_at: userProfile.updated_at,
-        isFollowing: userProfile.isFollowing,
-        travel_listings: userProfile.travel_listings
-      }}
-      posts={mockPosts}
-      isOwnProfile={false}
-      onFollowPress={handleFollowPress}
-      postsLoading={false}
-      onTravelListingPress={(listingId) => {
-        // TODO: Implement travel listing detail navigation
-        console.log('Travel listing pressed:', listingId);
-      }}
-    />
+    <MainLayout>
+      {userLoading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#4A80F0" />
+        </View>
+      ) : userError || !userProfile ? (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>
+            {userError || 'Kullanıcı bulunamadı'}
+          </Text>
+        </View>
+      ) : (
+        <ProfileComponent
+          profileData={{
+            id: userProfile.id,
+            name: userProfile.name,
+            username: userProfile.username,
+            email: userProfile.email,
+            profileImage: userProfile.profileImage,
+            coverImage: userProfile.coverImage,
+            bio: userProfile.bio,
+            followers_count: userProfile.followers_count,
+            following_count: userProfile.following_count,
+            points: userProfile.points,
+            badges: userProfile.badges,
+            hobbies: userProfile.hobbies,
+            languages: userProfile.languages,
+            created_at: userProfile.created_at,
+            updated_at: userProfile.updated_at,
+            isFollowing: userProfile.isFollowing,
+            travel_listings: userProfile.travel_listings
+          }}
+          posts={mockPosts}
+          isOwnProfile={false}
+          onFollowPress={handleFollowPress}
+          postsLoading={false}
+          onTravelListingPress={(listingId) => {
+            // TODO: Implement travel listing detail navigation
+            console.log('Travel listing pressed:', listingId);
+          }}
+        />
+      )}
+    </MainLayout>
   );
 };
 

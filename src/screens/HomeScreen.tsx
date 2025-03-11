@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import MainLayout from '../layouts/MainLayout';
-import { Post } from '../components/Post';
+import Post from '../components/Post';
 import { CreatePostComponent } from '../components/CreatePostComponent';
 import { usePostStore } from '../stores/postStore';
 
@@ -44,11 +44,15 @@ const HomeScreen: React.FC = () => {
 
   const handleCreatePost = async (data: {
     content: string;
-    images: string[];
+    images: File[];
     taggedUsers: { id: string; name: string; username: string; profileImage: string; }[];
     communityId?: string;
   }) => {
     await createPost(data);
+  };
+
+  const handlePostPress = (postId: string) => {
+    navigation.navigate('PostDetail', { postId });
   };
 
   return (
@@ -75,7 +79,7 @@ const HomeScreen: React.FC = () => {
           </View>
         ) : (
           posts.map((post) => (
-            <Post key={post.id} post={post} />
+            <Post key={post.id} post={post} onPress={handlePostPress} />
           ))
         )}
       </ScrollView>

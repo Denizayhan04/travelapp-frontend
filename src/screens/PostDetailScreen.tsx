@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Text, Image, TouchableOpacity } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  ScrollView, 
+  Text, 
+  Image, 
+  TouchableOpacity, 
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard
+} from 'react-native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import Post from '../components/Post';
+import { Ionicons } from '@expo/vector-icons';
+import MainLayout from '../layouts/MainLayout';
 
 type PostDetailScreenRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
+type PostDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface Comment {
   id: string;
@@ -21,17 +36,19 @@ interface Comment {
 // Mock post data - Bu kısmı gerçek verilerle değiştireceğiz
 const mockPost = {
   id: '1',
+  user_id: '1',
+  content: 'Bu harika bir gönderi!',
+  images: [{ id: '1', image_url: 'https://picsum.photos/400', order: 1 }],
+  likes_count: 42,
+  comments_count: 12,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   user: {
     id: '1',
     name: 'Ahmet Yılmaz',
-    username: '@ahmetyilmaz',
-    image: 'https://picsum.photos/200',
-  },
-  content: 'Bu harika bir gönderi!',
-  images: ['https://picsum.photos/400'],
-  likes: 42,
-  comments: 12,
-  time: '2 saat önce',
+    username: 'ahmetyilmaz',
+    profileImage: 'https://picsum.photos/200',
+  }
 };
 
 // Mock comments data
@@ -85,15 +102,48 @@ const mockComments: Comment[] = [
 
 const PostDetailScreen: React.FC = () => {
   const route = useRoute<PostDetailScreenRouteProp>();
-  const { postId } = route.params;
+  const navigation = useNavigation<PostDetailScreenNavigationProp>();
+  const { postId, focusComment } = route.params;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [commentText, setCommentText] = useState('');
+  const [localComments, setLocalComments] = useState<Comment[]>(mockComments);
 
-  // Burada postId kullanılarak gerçek veriyi çekeceğiz
-  // Şimdilik mock veriyi kullanıyoruz
-  const post = mockPost;
+  const handleCommentUserPress = (userId: string) => {
+    navigation.navigate('UserProfile', { userId });
+  };
+
+  const handleSendComment = () => {
+    if (!commentText.trim()) return;
+
+    const newComment: Comment = {
+      id: Date.now().toString(), // Gerçek uygulamada backend'den gelecek
+      user: {
+        id: '1', // Gerçek uygulamada current user'dan gelecek
+        name: 'Kullanıcı Adı',
+        username: '@kullanici',
+        image: 'https://picsum.photos/200',
+      },
+      text: commentText.trim(),
+      time: 'Şimdi'
+    };
+
+    setLocalComments(prevComments => [newComment, ...prevComments]);
+    setCommentText('');
+    Keyboard.dismiss();
+
+    // Yeni yorumu göstermek için scroll yapıyoruz
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
 
   const renderComment = (comment: Comment) => (
     <View key={comment.id} style={styles.commentContainer}>
-      <TouchableOpacity style={styles.commentHeader}>
+      <TouchableOpacity 
+        style={styles.commentHeader}
+        onPress={() => handleCommentUserPress(comment.user.id)}
+        activeOpacity={0.7}
+      >
         <Image source={{ uri: comment.user.image }} style={styles.commentUserImage} />
         <View style={styles.commentUserInfo}>
           <Text style={styles.commentUserName}>{comment.user.name}</Text>
@@ -105,14 +155,61 @@ const PostDetailScreen: React.FC = () => {
     </View>
   );
 
+  React.useEffect(() => {
+    if (focusComment && scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 500);
+    }
+  }, [focusComment]);
+
   return (
-    <ScrollView style={styles.container}>
-      <Post {...post} isDetailView={true} />
-      <View style={styles.commentsSection}>
-        <Text style={styles.commentsTitle}>Yorumlar</Text>
-        {mockComments.map(renderComment)}
-      </View>
-    </ScrollView>
+    <MainLayout>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView 
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <Post post={mockPost} />
+          <View style={styles.commentsSection}>
+            <Text style={styles.commentsTitle}>Yorumlar</Text>
+            {localComments.map(renderComment)}
+          </View>
+        </ScrollView>
+
+        <View style={styles.commentInputContainer}>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Yorum yaz..."
+            value={commentText}
+            onChangeText={setCommentText}
+            multiline
+            maxLength={1000}
+            autoCorrect={false}
+          />
+          <TouchableOpacity 
+            style={[
+              styles.sendButton,
+              !commentText.trim() && styles.sendButtonDisabled
+            ]} 
+            onPress={handleSendComment}
+            disabled={!commentText.trim()}
+          >
+            <Ionicons 
+              name="send" 
+              size={24} 
+              color={commentText.trim() ? "#4A80F0" : "#999"} 
+            />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </MainLayout>
   );
 };
 
@@ -121,9 +218,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 16,
+  },
   commentsSection: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 80, // Yorum yazma alanı için extra padding
   },
   commentsTitle: {
     fontSize: 16,
@@ -169,6 +273,40 @@ const styles = StyleSheet.create({
     color: '#000',
     lineHeight: 20,
     marginLeft: 48,
+  },
+  commentInputContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#EFF3F4',
+  },
+  commentInput: {
+    flex: 1,
+    minHeight: 36,
+    maxHeight: 100,
+    backgroundColor: '#F2F2F2',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 12,
+    fontSize: 16,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
   },
 });
 

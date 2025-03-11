@@ -31,7 +31,7 @@ interface CreatePostComponentProps {
   communities: Community[];
   onCreatePost: (data: {
     content: string;
-    images: string[];
+    images: File[];
     taggedUsers: TaggedUser[];
     communityId?: string;
   }) => void;
@@ -42,7 +42,7 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
   onCreatePost,
 }) => {
   const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [showTagInput, setShowTagInput] = useState(false);
@@ -64,21 +64,30 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
     },
   ];
 
-  const pickImage = async () => {
+  const handleImagePick = async () => {
+    if (selectedImages.length >= 4) {
+      // TODO: Show error message
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      aspect: [1, 1],
+      quality: 0.8,
     });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImages([...images, result.assets[0].uri]);
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const file = new File([blob], `image-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      setSelectedImages([...selectedImages, file]);
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
   };
 
   const handleTagUser = (user: TaggedUser) => {
@@ -94,16 +103,18 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
   };
 
   const handleSubmit = () => {
+    if (!content.trim()) return;
+
     onCreatePost({
-      content,
-      images,
+      content: content.trim(),
+      images: selectedImages,
       taggedUsers,
       communityId: selectedCommunity?.id,
     });
 
     // Reset form
     setContent('');
-    setImages([]);
+    setSelectedImages([]);
     setTaggedUsers([]);
     setSelectedCommunity(null);
   };
@@ -134,16 +145,19 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
       )}
 
       {/* Image Preview */}
-      {images.length > 0 && (
+      {selectedImages.length > 0 && (
         <ScrollView horizontal style={styles.imagePreviewContainer}>
-          {images.map((uri, index) => (
+          {selectedImages.map((image, index) => (
             <View key={index} style={styles.imagePreview}>
-              <Image source={{ uri }} style={styles.previewImage} />
+              <Image
+                source={{ uri: URL.createObjectURL(image) }}
+                style={styles.previewImage}
+              />
               <TouchableOpacity
                 style={styles.removeImageButton}
                 onPress={() => handleRemoveImage(index)}
               >
-                <MaterialCommunityIcons name="close-circle" size={24} color="#fff" />
+                <MaterialCommunityIcons name="close" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
           ))}
@@ -179,10 +193,10 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
       )}
 
       {/* Action Buttons */}
-      <View style={styles.actionContainer}>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity onPress={pickImage} style={styles.actionButton}>
-            <MaterialCommunityIcons name="image" size={24} color="#4A80F0" />
+      <View style={styles.footer}>
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={handleImagePick}>
+            <MaterialCommunityIcons name="image-plus" size={24} color="#4A80F0" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setShowTagInput(!showTagInput)}
@@ -219,11 +233,11 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
         </ScrollView>
 
         <TouchableOpacity
-          style={[styles.postButton, !content && styles.postButtonDisabled]}
+          style={[styles.submitButton, !content.trim() && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={!content}
+          disabled={!content.trim()}
         >
-          <Text style={styles.postButtonText}>Paylaş</Text>
+          <Text style={styles.submitButtonText}>Paylaş</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -233,7 +247,7 @@ export const CreatePostComponent: React.FC<CreatePostComponentProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
-    padding: 16,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -241,7 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 80,
     textAlignVertical: 'top',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   taggedUsersContainer: {
     flexDirection: 'row',
@@ -270,23 +284,27 @@ const styles = StyleSheet.create({
   },
   imagePreviewContainer: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   imagePreview: {
-    marginRight: 8,
     position: 'relative',
+    marginRight: 10,
   },
   previewImage: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 8,
   },
   removeImageButton: {
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#ff3b30',
     borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tagSearchContainer: {
     marginBottom: 12,
@@ -317,15 +335,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  actionContainer: {
-    flexDirection: 'column',
-  },
-  actionButtons: {
+  footer: {
     flexDirection: 'row',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  actionButton: {
-    marginRight: 16,
+  actions: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  submitButton: {
+    backgroundColor: '#4A80F0',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   communityList: {
     flexDirection: 'row',
@@ -355,18 +386,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
-  postButton: {
-    backgroundColor: '#4A80F0',
-    borderRadius: 20,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  postButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  postButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  actionButton: {
+    marginRight: 16,
   },
 }); 

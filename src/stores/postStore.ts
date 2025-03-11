@@ -4,7 +4,11 @@ export interface Post {
   id: string;
   user_id: string;
   content: string;
-  images: string[];
+  images: {
+    id: string;
+    image_url: string;
+    order: number;
+  }[];
   likes_count: number;
   comments_count: number;
   created_at: string;
@@ -24,7 +28,7 @@ interface PostState {
   fetchPosts: () => Promise<void>;
   createPost: (data: {
     content: string;
-    images: string[];
+    images: File[];
     taggedUsers: { id: string; name: string; username: string; profileImage: string; }[];
     communityId?: string;
   }) => Promise<void>;
@@ -41,37 +45,65 @@ export const usePostStore = create<PostState>((set, get) => ({
   fetchPosts: async () => {
     set({ loading: true, error: null });
     try {
-      // Burada gerçek API çağrısı yapılacak
+      // TODO: API'den postları çek
+      // Şimdilik mock data kullanıyoruz
       const mockPosts: Post[] = [
         {
           id: '1',
           user_id: '1',
-          content: 'Bugün harika bir gün! #seyahat #gezgin',
-          images: ['https://picsum.photos/400/300'],
+          content: 'Harika bir gün! 🌞',
+          images: [
+            {
+              id: '1',
+              image_url: 'https://picsum.photos/800/800',
+              order: 0
+            },
+            {
+              id: '2',
+              image_url: 'https://picsum.photos/800/801',
+              order: 1
+            },
+            {
+              id: '3',
+              image_url: 'https://picsum.photos/800/802',
+              order: 2
+            }
+          ],
           likes_count: 42,
           comments_count: 5,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           user: {
             id: '1',
-            name: 'John Doe',
-            username: 'johndoe',
+            name: 'Deniz Ayhan',
+            username: 'denizayhan04',
             profileImage: 'https://picsum.photos/200',
           },
         },
         {
           id: '2',
           user_id: '2',
-          content: 'Yeni rotalar, yeni maceralar! 🌍✈️',
-          images: ['https://picsum.photos/400/301'],
+          content: 'Yeni kameramla çektiğim ilk fotoğraflar 📸',
+          images: [
+            {
+              id: '4',
+              image_url: 'https://picsum.photos/800/803',
+              order: 0
+            },
+            {
+              id: '5',
+              image_url: 'https://picsum.photos/800/804',
+              order: 1
+            }
+          ],
           likes_count: 28,
           comments_count: 3,
           created_at: new Date(Date.now() - 86400000).toISOString(),
           updated_at: new Date(Date.now() - 86400000).toISOString(),
           user: {
             id: '2',
-            name: 'Jane Smith',
-            username: 'janesmith',
+            name: 'Ahmet Yılmaz',
+            username: 'ahmetyilmaz',
             profileImage: 'https://picsum.photos/201',
           },
         },
@@ -79,7 +111,7 @@ export const usePostStore = create<PostState>((set, get) => ({
 
       set({ posts: mockPosts, loading: false });
     } catch (error) {
-      set({ error: 'Posts could not be fetched', loading: false });
+      set({ error: 'Postlar yüklenirken bir hata oluştu', loading: false });
     }
   },
 
@@ -92,7 +124,11 @@ export const usePostStore = create<PostState>((set, get) => ({
         id: Date.now().toString(),
         user_id: '1', // Giriş yapmış kullanıcının ID'si
         content: data.content,
-        images: data.images,
+        images: data.images.map((_, index) => ({
+          id: `${Date.now()}-${index}`,
+          image_url: URL.createObjectURL(data.images[index]),
+          order: index
+        })),
         likes_count: 0,
         comments_count: 0,
         created_at: new Date().toISOString(),
@@ -137,7 +173,6 @@ export const usePostStore = create<PostState>((set, get) => ({
 
   likePost: async (postId) => {
     try {
-      // Burada gerçek API çağrısı yapılacak
       set((state) => ({
         posts: state.posts.map((post) =>
           post.id === postId
@@ -146,13 +181,12 @@ export const usePostStore = create<PostState>((set, get) => ({
         ),
       }));
     } catch (error) {
-      set({ error: 'Could not like post' });
+      set({ error: 'Beğeni işlemi başarısız oldu' });
     }
   },
 
   unlikePost: async (postId) => {
     try {
-      // Burada gerçek API çağrısı yapılacak
       set((state) => ({
         posts: state.posts.map((post) =>
           post.id === postId
@@ -161,7 +195,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         ),
       }));
     } catch (error) {
-      set({ error: 'Could not unlike post' });
+      set({ error: 'Beğeni kaldırma işlemi başarısız oldu' });
     }
   },
 })); 

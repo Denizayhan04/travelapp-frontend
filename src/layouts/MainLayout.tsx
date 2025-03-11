@@ -1,6 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { 
+  View, 
+  StyleSheet, 
+  SafeAreaView, 
+  Platform, 
+  StatusBar 
+} from 'react-native';
 import Header from '../components/Header';
 import { useRoute } from '@react-navigation/native';
 
@@ -11,6 +16,7 @@ interface MainLayoutProps {
   onFilter?: () => void;
   onNotificationsPress?: () => void;
   onMessagesPress?: () => void;
+  style?: any;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -20,6 +26,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onFilter,
   onNotificationsPress,
   onMessagesPress,
+  style,
 }) => {
   const route = useRoute();
   const getHeaderVariant = () => {
@@ -33,24 +40,34 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header
-        variant={getHeaderVariant()}
-        username={username}
-        onSearch={onSearch}
-        onFilter={onFilter}
-        onNotificationsPress={onNotificationsPress}
-        onMessagesPress={onMessagesPress}
-      />
-      <View style={styles.content}>{children}</View>
-    </SafeAreaView>
+    <View style={[styles.container, style]}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#fff"
+        />
+        <Header
+          variant={getHeaderVariant()}
+          username={username}
+          onSearch={onSearch}
+          onFilter={onFilter}
+          onNotificationsPress={onNotificationsPress}
+          onMessagesPress={onMessagesPress}
+        />
+        <View style={styles.content}>{children}</View>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  safeArea: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   content: {
     flex: 1,
